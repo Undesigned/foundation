@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" ng-app="IdeaShopApp">
 <head>
-  <title>Foundation</title>
-  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
-  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <meta charset="utf-8" />
+  <title>Site Title</title>
+
+  <%= stylesheet_link_tag 'application' %>
+
   <%= csrf_meta_tags %>
 </head>
-<body>
 
-<%= yield %>
+  <body>
 
-</body>
+    <%= yield %>
+    <%= javascript_include_tag 'application' %>
+
+  </body>
+
 </html>
