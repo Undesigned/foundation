@@ -4,10 +4,17 @@
       Saving founders from alcoholism, one drink at a time.
     </h1>
     <img src="http://placehold.it/250x250" class="img-circle">
-    <div>
-      <a href="#" class="btn btn-danger btn-lg">
-        Sign me up!
-      </a>
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="row">
+          <div class="col-md-6">
+            <%= link_to 'Sign me up!', dashboard_path, class:'btn btn-danger btn-lg btn-block' %>
+          </div>
+          <div class="col-md-6">
+            <%= link_to 'Login', dashboard_path, class:'btn btn-primary btn-lg btn-block' %>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
