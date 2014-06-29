@@ -20,3 +20,6 @@
 #Ignore Intellij Files
 *.iml
 .idea
+
+.env
+database.yml
