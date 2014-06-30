@@ -8,6 +8,6 @@ class CreateLinks < ActiveRecord::Migration
       t.timestamps
     end
 
-    add_index :links, [:owner_id, :owner_type, :title]
+    add_index :links, [:owner_id, :owner_type, :title], unique: true
   end
 end

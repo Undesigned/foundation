@@ -6,5 +6,6 @@ class CreateMessages < ActiveRecord::Migration
       t.integer :message_thread_id
       t.timestamps
     end
+    add_index :messages, :message_thread_id
   end
 end

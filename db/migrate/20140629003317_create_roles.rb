@@ -8,5 +8,8 @@ class CreateRoles < ActiveRecord::Migration
       t.integer :startup_id
       t.timestamps
     end
+
+    add_index :roles, :user_id
+    add_index :roles, :startup_id
   end
 end

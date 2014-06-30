@@ -6,5 +6,7 @@ class CreateTokens < ActiveRecord::Migration
       t.belongs_to :user
       t.timestamps
     end
+
+    add_index :tokens, [:user_id, :provider], unique: true
   end
 end
