@@ -3,6 +3,7 @@ class UsersController < ApplicationController
   def auth
     # Parse OAuth hash
     auth_hash = request.env['omniauth.auth']
+    new_user = false
 
     # Find an existing user from this provider
     @user = User.where("provider = ? AND uid = ?", auth_hash.provider, auth_hash.uid.to_s).first
@@ -14,7 +15,7 @@ class UsersController < ApplicationController
       @user.provider = auth_hash.provider
       @user.uid = auth_hash.uid.to_s
       @user.save!
-      @user.import_data(auth_hash.provider)
+      new_user = true
     end
 
     # save access token from this provider
@@ -26,12 +27,16 @@ class UsersController < ApplicationController
       @user.tokens.create!(provider: auth_hash.provider, content: auth_hash.credentials.token)
     end
 
+    @user.import_data(auth_hash.provider) if new_user
+
     session[:user_id] = @user.id
 
     # Render web app
-    redirect_to dashboard_path
+    render :text => "woo #{@user.id}"
+    # redirect_to dashboard_path
   end
 
+  api :GET, '/users/:id/logout', 'Destroy current session'
   def logout
     reset_session
 
@@ -42,7 +47,7 @@ class UsersController < ApplicationController
     render :text => params[:message]
   end
 
-  api :GET, '/users/:id', "Get a specific user"
+  api :GET, '/users/:id', 'Get a specific user'
   def show
     @user = User.find(params[:id])
     render json: @user, root: false

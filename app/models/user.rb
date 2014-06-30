@@ -27,8 +27,7 @@ class User < ActiveRecord::Base
   end
 
   def import_from_angellist
-    api = AngellistApi::Client.new(:access_token => tokens.where(provider: 'angellist').first!)
-    result = api.me
+    result = AngellistApi.get_user(uid)
 
     # Save attributes
     self.update_attributes!({
@@ -45,31 +44,27 @@ class User < ActiveRecord::Base
 
     # Save links
     result.each_pair do |key, val|
-      if key =~ /_url$/
-        title = key.gsub(/_url$/, '')
-        link = links.where(title: title).first
-        if link
-          link.href = val
-          link.save!
-        else
-          links.create!(title: title, href: val)
-        end
-      end
+      next if (key =~ /_url$/).nil? || val.blank?
+      link = links.find_or_initialize_by(title: key.gsub(/_url$/, ''))
+      link.href = val
+      link.save!
     end
 
     # Save skills
-    result['skills'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? }
+    result['skills'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? } if result['skills']
 
     # Get all startups tagged with this user
-    startups = []
-    roles = api.user_roles(uid)
-    while roles['page'] <= roles['last_page']
-      startups.concat(roles['startup_roles'])
-      roles = api.user_roles(uid, {:page => roles['page'] + 1}) unless roles['page'] == roles['last_page']
+    startup_list = []
+    roles_pages = AngellistApi.user_roles(uid)
+    while roles_pages['page'] < roles_pages['last_page']
+      # There's more pages, loop through and get them all
+      startup_list.concat(roles_pages['startup_roles'])
+      roles_pages = AngellistApi.user_roles(uid, {:page => roles_pages['page'] + 1})
     end
+    startup_list.concat(roles_pages['startup_roles']) # concat the last page
 
     # Save startups
-    startups.each do |role|
+    startup_list.each do |role|
       # We don't care about startups this user did not found
       next if role['role'] != 'founder'
 
@@ -77,58 +72,47 @@ class User < ActiveRecord::Base
 
       # TODO confirm that this startup is incorporated and that this user is on the incorporation docs
 
-      s = startups.where(name: startup['name'])
+      # Set this user's role in the startup
+      s = startups.where(name: startup['name']).first
       if s
         r = roles.where(startup: s).first
-        r.title = role['title']
-        r.started = role['started_at'].to_date
-        r.ended = role['ended_at'].try(:to_date)
-        r.save!
-      else
-        r = roles.create!(title: role['title'], started: role['started_at'].to_date, ended: role['ended_at'].try(:to_date))
-      end
-      
-      su = api.get_startup(startup['id'])
-      image_url = su.delete('logo_url')
-      su.delete('thumb_url')
-      if s
-        s.update_attributes!({
-          name: su['name'],
-          image: image_url,
-          angellist_quality: su['quality'],
-          description: su['product_desc'],
-          byline: su['high_concept'],
-          follower_count: su['follower_count'],
-          company_size: su['company_size']
+        r.assign_attributes({
+          :title => role['title'],
+          :started => role['started_at'].to_date,
+          :ended => role['ended_at'].try(:to_date)
         }.delete_if{|k,v| v.blank?})
       else
-        s = r.startup.create!({
-          name: su['name'],
-          image: image_url,
-          angellist_quality: su['quality'],
-          description: su['product_desc'],
-          byline: su['high_concept'],
-          follower_count: su['follower_count'],
-          company_size: su['company_size']
-        })
+        r = roles.build(title: role['title'], started: role['started_at'].to_date, ended: role['ended_at'].try(:to_date))
       end
+      
+      # Update or create the startup
+      su = AngellistApi.get_startup(startup['id'])
+      image_url = su.delete('logo_url')
+      su.delete('thumb_url')
+      hsh = {
+        name: su['name'],
+        image: image_url,
+        angellist_quality: su['quality'],
+        description: su['product_desc'],
+        byline: su['high_concept'],
+        follower_count: su['follower_count'],
+        company_size: su['company_size']
+      }.delete_if{|k,v| v.blank?}
+      s ? s.update_attributes!(hsh) : s = r.create_startup!(hsh)
 
-      # Save links
+      # Save role
+      r.save!
+
+      # Save links for startup
       su.each_pair do |key, val|
-        if key =~ /_url$/
-          title = key.gsub(/_url$/, '')
-          link = s.links.where(title: title).first
-          if link
-            link.href = val
-            link.save!
-          else
-            s.links.create!(title: title, href: val)
-          end
-        end
+        next if (key =~ /_url$/).nil? || val.blank?
+        link = s.links.find_or_initialize_by(title: key.gsub(/_url$/, ''))
+        link.href = val
+        link.save!
       end
 
-      # Save markets
-      startup['markets'].each {|m| s.markets << Market.find_or_create_by!(name: m['display_name']) unless s.markets.where(name: m['display_name']).exists? }
+      # Save markets for startup
+      startup['markets'].each {|m| s.markets << Market.find_or_create_by!(name: m['display_name']) unless s.markets.where(name: m['display_name']).exists? } if startup['markets']
     end
   end
 end
