@@ -47,6 +47,14 @@ class UsersController < ApplicationController
     render :text => params[:message]
   end
 
+  api :GET, '/users/:id/import', 'Import data from a provider'
+  param :provider, String, :required => true, :desc => 'Name of provider to import data from'
+  def import
+    current_user.import_data(params[:provider])
+
+    render :text => "woo"
+  end
+
   api :GET, '/users/:id', 'Get a specific user'
   def show
     @user = User.find(params[:id])

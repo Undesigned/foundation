@@ -8,6 +8,8 @@ class CreateStartups < ActiveRecord::Migration
       t.text :description
       t.text :byline
       t.integer :follower_count
+      t.string :phone_number
+      t.boolean :confirmed
       t.timestamps
     end
 

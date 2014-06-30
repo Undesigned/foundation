@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   scope "/api" do
     resources :users, only: [:edit] do
-      get 'logout', on: :member
+      get 'logout', 'import', on: :member
     end
   end
 

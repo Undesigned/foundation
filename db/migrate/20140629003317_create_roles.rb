@@ -4,6 +4,7 @@ class CreateRoles < ActiveRecord::Migration
       t.string :title
       t.date :started
       t.date :ended
+      t.boolean :confirmed
       t.integer :user_id
       t.integer :startup_id
       t.timestamps

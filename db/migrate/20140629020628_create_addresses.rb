@@ -6,6 +6,7 @@ class CreateAddresses < ActiveRecord::Migration
       t.string :city
       t.string :state
       t.string :zip
+      t.string :country
       t.integer :addressable_id
       t.integer :addressable_type
       t.timestamps

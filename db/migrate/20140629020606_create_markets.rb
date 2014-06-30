@@ -7,11 +7,11 @@ class CreateMarkets < ActiveRecord::Migration
     end
     add_index :markets, :name, unique: true
 
-    create_table :markets_users, :id => false do |t|
+    create_table :markets_startups, :id => false do |t|
         t.references :market
-        t.references :user
+        t.references :startup
     end
-    add_index :markets_users, [:market_id, :user_id], unique: true
-    add_index :markets_users, :user_id
+    add_index :markets_startups, [:market_id, :startup_id], unique: true
+    add_index :markets_startups, :startup_id
   end
 end
