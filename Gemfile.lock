@@ -108,6 +108,7 @@ GEM
       omniauth (~> 1.2)
     pg (0.17.1)
     polyglot (0.3.5)
+    pr_geohash (1.0.0)
     protected_attributes (1.0.8)
       activemodel (>= 4.0.1, < 5.0)
     rack (1.5.2)
@@ -129,6 +130,8 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.3.2)
+    rsolr (1.0.10)
+      builder (>= 2.1.2)
     sass (3.3.9)
     sprockets (2.12.1)
       hike (~> 1.2)
@@ -139,6 +142,14 @@ GEM
       actionpack (>= 3.0)
       activesupport (>= 3.0)
       sprockets (~> 2.8)
+    sunspot (2.1.1)
+      pr_geohash (~> 1.0)
+      rsolr (~> 1.0.7)
+    sunspot_rails (2.1.1)
+      nokogiri
+      rails (>= 3)
+      sunspot (= 2.1.1)
+    sunspot_solr (2.1.1)
     thin (1.6.2)
       daemons (>= 1.0.9)
       eventmachine (>= 1.0.0)
@@ -172,4 +183,6 @@ DEPENDENCIES
   pg
   protected_attributes
   rails (= 4.1.2)
+  sunspot_rails
+  sunspot_solr
   thin

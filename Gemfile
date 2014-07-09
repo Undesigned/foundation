@@ -13,6 +13,8 @@ gem 'exceptionally'
 gem 'omniauth-angellist'
 gem 'angellist_api'
 gem 'mechanize'
+gem 'sunspot_rails'
+gem 'sunspot_solr', :groups => [:development] # optional pre-packaged Solr distribution for use in development
 
 # Front-end stuff
 gem 'angularjs-rails'
