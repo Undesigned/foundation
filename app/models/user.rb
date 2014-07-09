@@ -1,11 +1,12 @@
 class User < ActiveRecord::Base
-  attr_accessible :name, :email, :bio, :follower_count, :investor, :image, :location, 
+  attr_accessible :name, :email, :bio, :investor, :image, :location, 
                   :what_ive_built, :what_i_do, :criteria, :birthyear, 
                   :technical_points, :design_points, :business_points
   attr_readonly :provider, :uid
   has_many :links, as: :owner, :dependent => :destroy
   has_many :roles
   has_many :startups, through: :roles
+  has_many :meta_data, as: :owner, :dependent => :destroy
   has_and_belongs_to_many :skills
   has_many :tokens, :dependent => :destroy
   has_many :searches, :dependent => :destroy
@@ -19,6 +20,77 @@ class User < ActiveRecord::Base
   validates :email, :presence => true,
             :format   => { :with => VALID_EMAIL_REGEX },
             :uniqueness => { :case_sensitive => false }
+
+  searchable do
+    text :name, :location, :bio, :what_ive_built, :what_i_do, :criteria
+    text :startup_names do
+      startups.map(&:name)
+    end
+    text :startup_bylines do
+      startups.map(&:byline)
+    end
+    text :startup_descriptions do
+      startups.map(&:description)
+    end
+    text :skills do
+      skills.map(&:name)
+    end
+    text :markets do
+      startups.map { |startup| startup.markets.map(&:name) }.flatten
+    end
+    text :searches do
+      searches.map(&:content)
+    end
+    string :max_company_size
+    integer :total_startup_years
+    integer :startup_count do
+      startups.count
+    end
+    integer :technical_points
+    integer :design_points
+    integer :business_points
+    integer :age
+    boolean :investor
+    boolean :funded
+  end
+
+  def age
+    Time.now.year - birthyear
+  end
+
+  def funded
+    startups.exists?("total_funding > 0 or number_of_investments > 0")
+  end
+
+  def total_startup_years
+    roles.map{|role| (role.ended || Time.now).year}.max - roles.map{|role| role.started.year}.min
+  end
+
+  def max_company_size
+    case startups.map {|startup| startup.company_size.split('-').last.to_i}.max
+    when 0..10 then '1-10'
+    when 11..50 then '11-50'
+    when 51..200 then '51-200'
+    when 201..500 then '201-500'
+    else '500+'
+    end
+  end
+
+  def save_meta_data(name, value, source)
+    md = meta_data.find_or_initialize_by(name: name, source: source)
+    md.value = value
+    md.save!
+  end
+
+  def save_link(title, url)
+    link = links.find_or_initialize_by(title: title)
+    link.href = url
+    link.save!
+  end
+
+  def add_skill(skill)
+    skills << Skill.find_or_create_by!(name: skill) unless skills.exists?(name: skill)
+  end
 
   def import_data(provider)
     case provider
@@ -35,7 +107,6 @@ class User < ActiveRecord::Base
     self.update_attributes!({
       name: result['name'],
       bio: result['bio'],
-      follower_count: result['follower_count'],
       image: result['image'],
       what_ive_built: result['what_ive_built'],
       what_i_do: result['what_i_do'],
@@ -44,17 +115,15 @@ class User < ActiveRecord::Base
       investor: result['investor']
     }.delete_if{|k,v| v.blank?})
 
+    # Save angellist follower count
+    save_meta_data('follower_count', 'angellist', result['follower_count']) if result['follower_count']
+
     # Save links
-    result.each_pair do |key, val|
-      next if (key =~ /_url$/).nil? || val.blank?
-      link = links.find_or_initialize_by(title: key.gsub(/_url$/, ''))
-      link.href = val
-      link.save!
-    end
+    result.each_pair {|key, val| save_link(key.gsub(/_url$/, ''), val) if key =~ /_url$/ && val}
 
     # Save skills
-    result['skills'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? } if result['skills']
-    result['roles'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? } if result['roles']
+    result['skills'].each {|skill| add_skill(skill['display_name']) } if result['skills']
+    result['roles'].each {|skill| add_skill(skill['display_name']) } if result['roles']
 
     # Get all startups tagged with this user
     startup_list = []
@@ -87,9 +156,9 @@ class User < ActiveRecord::Base
       s = startups.where(name: startup_name).first
       if s
         r = roles.where(startup: s).first
-        r.assign_attributes(user_hsh)
+        r.update_attributes!(user_hsh)
       else
-        r = roles.build(user_hsh)
+        r = roles.create!(user_hsh)
       end
       
       # Update or create the startup
@@ -100,10 +169,8 @@ class User < ActiveRecord::Base
       startup_hsh = {
         name: startup_name,
         image: image_url,
-        angellist_quality: su['quality'],
         description: su['product_desc'],
         byline: su['high_concept'],
-        follower_count: su['follower_count'],
         company_size: su['company_size'],
         confirmed: !hoover_validations[:company].nil?,
         phone_number: hoover_validations[:company].try(:[], :phone_number),
@@ -112,6 +179,10 @@ class User < ActiveRecord::Base
         funding_stage: funding[:stage]
       }.delete_if{|k,v| v.blank?}
       s ? s.update_attributes!(startup_hsh) : s = r.create_startup!(startup_hsh)
+
+      # Save angellist startup follower count and quality rating
+      s.save_meta_data('follower_count', 'angellist', su['follower_count']) if su['follower_count']
+      s.save_meta_data('quality', 'angellist', su['quality']) if su['quality']
 
       # Add address to startup
       if hoover_validations[:company]
@@ -122,20 +193,12 @@ class User < ActiveRecord::Base
         end
       end
 
-      # Save role
-      r.save!
-
       # Save links for startup
-      su.each_pair do |key, val|
-        next if (key =~ /_url$/).nil? || val.blank?
-        link = s.links.find_or_initialize_by(title: key.gsub(/_url$/, ''))
-        link.href = val
-        link.save!
-      end
+      su.each_pair {|key, val| s.save_link(key.gsub(/_url$/, ''), val) if key =~ /_url$/ && val}
 
       # Save markets for startup
-      su['markets'].each {|m| s.markets << Market.find_or_create_by!(name: m['display_name']) unless s.markets.where(name: m['display_name']).exists? } if su['markets']
-      hoover_validations[:company][:tags].each {|tag| s.markets << Market.find_or_create_by!(name: tag) unless s.markets.where(name: tag).exists? } if hoover_validations[:company]
+      su['markets'].each {|m| s.add_market(m['display_name']) } if su['markets']
+      hoover_validations[:company][:tags].each {|tag| s.add_market(tag) } if hoover_validations[:company]
     end
   end
 end

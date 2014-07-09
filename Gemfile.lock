@@ -182,7 +182,7 @@ DEPENDENCIES
   omniauth-angellist
   pg
   protected_attributes
-  rails (= 4.1.2)
+  rails (~> 4.1.2)
   sunspot_rails
   sunspot_solr
   thin

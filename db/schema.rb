@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140629040741) do
+ActiveRecord::Schema.define(version: 20140709175833) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -84,6 +84,18 @@ ActiveRecord::Schema.define(version: 20140629040741) do
 
   add_index "messages", ["message_thread_id"], name: "index_messages_on_message_thread_id", using: :btree
 
+  create_table "meta_data", force: true do |t|
+    t.string   "name"
+    t.string   "value"
+    t.string   "source"
+    t.string   "owner_type"
+    t.integer  "owner_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "meta_data", ["owner_id", "owner_type", "name", "source"], name: "index_meta_data_on_owner_id_and_owner_type_and_name_and_source", unique: true, using: :btree
+
   create_table "roles", force: true do |t|
     t.string   "title"
     t.date     "started"
@@ -125,12 +137,13 @@ ActiveRecord::Schema.define(version: 20140629040741) do
     t.string   "name"
     t.string   "company_size"
     t.string   "image"
-    t.integer  "angellist_quality"
     t.text     "description"
     t.text     "byline"
-    t.integer  "follower_count"
     t.string   "phone_number"
     t.boolean  "confirmed"
+    t.integer  "total_funding"
+    t.integer  "number_of_investments"
+    t.string   "funding_stage"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -158,8 +171,11 @@ ActiveRecord::Schema.define(version: 20140629040741) do
     t.text     "criteria"
     t.string   "provider"
     t.string   "uid"
-    t.integer  "follower_count"
     t.boolean  "investor"
+    t.integer  "birthyear"
+    t.integer  "technical_points"
+    t.integer  "design_points"
+    t.integer  "business_points"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

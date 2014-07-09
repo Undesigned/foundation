@@ -11,12 +11,11 @@ class CreateUsers < ActiveRecord::Migration
       t.text :criteria
       t.string :provider
       t.string :uid
-      t.integer :follower_count
       t.boolean :investor
       t.integer :birthyear
-      t.integer :technical_percentage
-      t.integer :design_percentage
-      t.integer :business_percentage
+      t.integer :technical_points
+      t.integer :design_points
+      t.integer :business_points
 
       t.timestamps
     end
