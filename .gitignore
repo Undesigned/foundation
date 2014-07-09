@@ -15,12 +15,14 @@
 /log
 /tmp
 
+# Ignore stupid Mac OS files
 .DS_Store
 
 #Ignore Intellij Files
 *.iml
 .idea
 
+# Ignore config and solr data files
 .env
 database.yml
 /solr
