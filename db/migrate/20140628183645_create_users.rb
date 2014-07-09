@@ -13,6 +13,10 @@ class CreateUsers < ActiveRecord::Migration
       t.string :uid
       t.integer :follower_count
       t.boolean :investor
+      t.integer :birthyear
+      t.integer :technical_percentage
+      t.integer :design_percentage
+      t.integer :business_percentage
 
       t.timestamps
     end

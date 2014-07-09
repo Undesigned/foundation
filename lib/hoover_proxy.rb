@@ -16,7 +16,7 @@ class HooverProxy < Scraper
 
     # Parse page and return standardized data
     page_content = Nokogiri::HTML(page.content)
-    hash = {
+    {
       :name => link.text.strip,
       :address => {
         :street => page_content.xpath('//span[@itemprop="streetAddress"]').text.strip,
@@ -38,7 +38,7 @@ class HooverProxy < Scraper
 
     # Parse page and return standardized data
     page_content = Nokogiri::HTML(page.content)
-    hash = {
+    {
       :name => array_of_links.first.text.strip, # Choose the first match, since it should be the best match
       :title => page_content.xpath('//*[@id="shell"]/div/div/div[2]/div[3]/div/div/div[1]/table/tbody/tr[1]/td[2]').text.strip,
       :company => page_content.xpath('//*[@id="shell"]/div/div/div[2]/div[3]/div/div/div[1]/table/tbody/tr[1]/td[3]').text.strip

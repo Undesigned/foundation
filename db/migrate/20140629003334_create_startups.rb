@@ -10,6 +10,9 @@ class CreateStartups < ActiveRecord::Migration
       t.integer :follower_count
       t.string :phone_number
       t.boolean :confirmed
+      t.integer :total_funding
+      t.integer :number_of_investments
+      t.string :funding_stage
       t.timestamps
     end
 

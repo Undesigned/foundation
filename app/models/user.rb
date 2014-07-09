@@ -1,5 +1,7 @@
 class User < ActiveRecord::Base
-  attr_accessible :name, :email, :bio, :follower_count, :investor, :image, :location, :what_ive_built, :what_i_do, :criteria
+  attr_accessible :name, :email, :bio, :follower_count, :investor, :image, :location, 
+                  :what_ive_built, :what_i_do, :criteria, :birthyear, 
+                  :technical_points, :design_points, :business_points
   attr_readonly :provider, :uid
   has_many :links, as: :owner, :dependent => :destroy
   has_many :roles
@@ -52,6 +54,7 @@ class User < ActiveRecord::Base
 
     # Save skills
     result['skills'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? } if result['skills']
+    result['roles'].each {|skill| skills << Skill.find_or_create_by!(name: skill['display_name']) unless skills.where(name: skill['display_name']).exists? } if result['roles']
 
     # Get all startups tagged with this user
     startup_list = []
@@ -93,6 +96,7 @@ class User < ActiveRecord::Base
       su = AngellistApi.get_startup(startup['id'])
       image_url = su.delete('logo_url')
       su.delete('thumb_url')
+      funding = AngellistProxy.new.get_funding(su['angellist_url']) || {}
       startup_hsh = {
         name: startup_name,
         image: image_url,
@@ -102,7 +106,10 @@ class User < ActiveRecord::Base
         follower_count: su['follower_count'],
         company_size: su['company_size'],
         confirmed: !hoover_validations[:company].nil?,
-        phone_number: hoover_validations[:company].try(:[], :phone_number)
+        phone_number: hoover_validations[:company].try(:[], :phone_number),
+        total_funding: funding[:total_funding],
+        number_of_investments: funding[:investors].try(:length),
+        funding_stage: funding[:stage]
       }.delete_if{|k,v| v.blank?}
       s ? s.update_attributes!(startup_hsh) : s = r.create_startup!(startup_hsh)
 
@@ -127,7 +134,7 @@ class User < ActiveRecord::Base
       end
 
       # Save markets for startup
-      startup['markets'].each {|m| s.markets << Market.find_or_create_by!(name: m['display_name']) unless s.markets.where(name: m['display_name']).exists? } if startup['markets']
+      su['markets'].each {|m| s.markets << Market.find_or_create_by!(name: m['display_name']) unless s.markets.where(name: m['display_name']).exists? } if su['markets']
       hoover_validations[:company][:tags].each {|tag| s.markets << Market.find_or_create_by!(name: tag) unless s.markets.where(name: tag).exists? } if hoover_validations[:company]
     end
   end

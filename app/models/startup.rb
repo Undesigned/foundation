@@ -1,5 +1,5 @@
 class Startup < ActiveRecord::Base
-  attr_accessible :name, :company_size, :image, :angellist_quality, :description, :byline, :follower_count, :confirmed, :phone_number
+  attr_accessible :name, :company_size, :image, :angellist_quality, :description, :byline, :follower_count, :confirmed, :phone_number, :total_funding, :number_of_investments, :funding_stage
   has_one :address, as: :addressable, :dependent => :destroy
   has_many :links, as: :owner, :dependent => :destroy
   has_many :roles

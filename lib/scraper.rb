@@ -1,6 +1,6 @@
 class Scraper
 
-  def initialize(base_url)
+  def initialize(base_url = '')
     @agent = Mechanize.new { |agent|
       agent.user_agent_alias = 'Windows IE 7'
     }
