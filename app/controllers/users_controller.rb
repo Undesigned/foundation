@@ -19,13 +19,9 @@ class UsersController < ApplicationController
     end
 
     # save access token from this provider
-    token = @user.tokens.where(provider: auth_hash.provider).first
-    if token
-      token.content = auth_hash.credentials.token
-      token.save!
-    else
-      @user.tokens.create!(provider: auth_hash.provider, content: auth_hash.credentials.token)
-    end
+    token = @user.tokens.find_or_initialize_by(provider: auth_hash.provider)
+    token.content = auth_hash.credentials.token
+    token.save!
 
     @user.import_data(auth_hash.provider) if new_user
 

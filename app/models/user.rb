@@ -21,7 +21,7 @@ class User < ActiveRecord::Base
             :format   => { :with => VALID_EMAIL_REGEX },
             :uniqueness => { :case_sensitive => false }
 
-  searchable do
+  searchable(include: [{roles: {startups: :markets}}, :skills], ignore_attribute_changes_of: [:email, :image]) do
     text :name, :location, :bio, :what_ive_built, :what_i_do, :criteria
     text :startup_names do
       startups.map(&:name)
@@ -37,9 +37,6 @@ class User < ActiveRecord::Base
     end
     text :markets do
       startups.map { |startup| startup.markets.map(&:name) }.flatten
-    end
-    text :searches do
-      searches.map(&:content)
     end
     string :max_company_size
     integer :total_startup_years
@@ -104,7 +101,7 @@ class User < ActiveRecord::Base
     result = AngellistApi.get_user(uid)
 
     # Save attributes
-    self.update_attributes!({
+    self.assign_attributes({
       name: result['name'],
       bio: result['bio'],
       image: result['image'],
@@ -185,13 +182,7 @@ class User < ActiveRecord::Base
       s.save_meta_data('quality', 'angellist', su['quality']) if su['quality']
 
       # Add address to startup
-      if hoover_validations[:company]
-        if s.address
-          s.address.update_attributes!(hoover_validations[:company][:address])
-        else
-          s.create_address!(hoover_validations[:company][:address])
-        end
-      end
+      s.set_address(hoover_validations[:company][:address]) if hoover_validations[:company]
 
       # Save links for startup
       su.each_pair {|key, val| s.save_link(key.gsub(/_url$/, ''), val) if key =~ /_url$/ && val}
@@ -200,5 +191,8 @@ class User < ActiveRecord::Base
       su['markets'].each {|m| s.add_market(m['display_name']) } if su['markets']
       hoover_validations[:company][:tags].each {|tag| s.add_market(tag) } if hoover_validations[:company]
     end
+
+    # save and reindex
+    self.save!
   end
 end
