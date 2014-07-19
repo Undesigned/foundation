@@ -24,19 +24,19 @@ class User < ActiveRecord::Base
   searchable(include: [{roles: {startups: :markets}}, :skills], ignore_attribute_changes_of: [:email, :image]) do
     text :name, :location, :bio, :what_ive_built, :what_i_do, :criteria
     text :startup_names do
-      startups.map(&:name)
+      startups.pluck(:name)
     end
     text :startup_bylines do
-      startups.map(&:byline)
+      startups.pluck(:byline)
     end
     text :startup_descriptions do
-      startups.map(&:description)
+      startups.pluck(:description)
     end
     text :skills do
-      skills.map(&:name)
+      skills.pluck(:name)
     end
     text :markets do
-      startups.map { |startup| startup.markets.map(&:name) }.flatten
+      startups.map { |startup| startup.markets.pluck(:name) }.flatten
     end
     string :max_company_size
     integer :total_startup_years
