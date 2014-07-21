@@ -60,12 +60,28 @@ class UsersController < ApplicationController
   end
 
   api :GET, '/users/search', 'Search for users'
-  param :q, String, :required => false
+  param :q, String, :required => false, :desc => 'query to fulltext search keywords for'
+  param :age, String, :required => false, :desc => 'approximate age of founder to search for'
+  param :years, String, :required => false, :desc => 'number of years working on startups'
+  param :startups, String, :required => false, :desc => 'number of startups worked on'
+  param :size, String, :required => false, :desc => 'size of largest company: 1-10, 11-50, 51-200, 201-500, 500+'
+  param :investor, ['true','false'], :required => false, :desc => 'is the founder also an investor?'
+  param :funded, ['true','false'], :required => false, :desc => 'has this founder been funded?'
   def search
     @users = User.search do
       fulltext params[:q] do
         query_phrase_slop 2
         phrase_slop 2
+
+        # search age +- 20%
+        with(:age, 0.8*params[:age].to_i..1.2*params[:age].to_i) if params[:age]
+        # search number of years in startups +- 20%
+        with(:total_startup_years, 0.8*params[:years].to_i..1.2*params[:years].to_i) if params[:years]
+        # search total number of startups +- 1
+        with(:startup_count, params[:startups].to_i - 1..params[:startups].to_i + 1) if params[:startups]
+        with(:max_company_size, params[:size]) if params[:size]
+        with(:investor, params[:investor] == 'true') unless params[:investor].nil?
+        with(:funded, params[:funded] == 'true') unless params[:funded].nil?
       end
     end.results if params[:q]
   end
