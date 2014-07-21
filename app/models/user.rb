@@ -52,7 +52,7 @@ class User < ActiveRecord::Base
   end
 
   def age
-    Time.now.year - birthyear
+    birthyear ? Time.now.year - birthyear : nil
   end
 
   def funded
@@ -60,12 +60,16 @@ class User < ActiveRecord::Base
   end
 
   def total_startup_years
-    roles.map{|role| (role.ended || Time.now).year}.max - roles.map{|role| role.started.year}.min
+    max_year, min_year = roles.map{|role| [(role.ended || Time.now).year, role.started.year]}.transpose
+    max_year = max_year.try(:max)
+    min_year = min_year.try(:min)
+    max_year && min_year ? max_year - min_year : 0
   end
 
   def max_company_size
     case startups.map {|startup| startup.company_size.split('-').last.to_i}.max
-    when 0..10 then '1-10'
+    when 0 then nil
+    when 1..10 then '1-10'
     when 11..50 then '11-50'
     when 51..200 then '51-200'
     when 201..500 then '201-500'
@@ -75,7 +79,7 @@ class User < ActiveRecord::Base
 
   def save_meta_data(name, value, source)
     md = meta_data.find_or_initialize_by(name: name, source: source)
-    md.value = value
+    md.value = value.to_s
     md.save!
   end
 
@@ -113,7 +117,7 @@ class User < ActiveRecord::Base
     }.delete_if{|k,v| v.blank?})
 
     # Save angellist follower count
-    save_meta_data('follower_count', 'angellist', result['follower_count']) if result['follower_count']
+    save_meta_data('follower_count', result['follower_count'], 'angellist') if result['follower_count']
 
     # Save links
     result.each_pair {|key, val| save_link(key.gsub(/_url$/, ''), val) if key =~ /_url$/ && val}
@@ -178,8 +182,8 @@ class User < ActiveRecord::Base
       s ? s.update_attributes!(startup_hsh) : s = r.create_startup!(startup_hsh)
 
       # Save angellist startup follower count and quality rating
-      s.save_meta_data('follower_count', 'angellist', su['follower_count']) if su['follower_count']
-      s.save_meta_data('quality', 'angellist', su['quality']) if su['quality']
+      s.save_meta_data('follower_count', su['follower_count'], 'angellist') if su['follower_count']
+      s.save_meta_data('quality', su['quality'], 'angellist') if su['quality']
 
       # Add address to startup
       s.set_address(hoover_validations[:company][:address]) if hoover_validations[:company]

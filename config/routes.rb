@@ -1,8 +1,7 @@
 Rails.application.routes.draw do
-  scope "/api" do
-    resources :users, only: [:edit] do
-      get 'logout', 'import', on: :member
-    end
+  resources :users do
+    get 'logout', 'import', on: :member
+    get 'search', on: :collection
   end
 
   # Omniauth callback

@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+  skip_before_filter :require_login, :only => [:auth, :authfail]
 
   def auth
     # Parse OAuth hash
@@ -28,19 +29,21 @@ class UsersController < ApplicationController
     session[:user_id] = @user.id
 
     # Render web app
-    render :text => "woo #{@user.id}"
-    # redirect_to dashboard_path
+    flash.notice = 'Welcome to Found! We\'ve pulled in some of your data from AngelList to get you started.' if new_user
+    redirect_to @user
   end
 
   api :GET, '/users/:id/logout', 'Destroy current session'
   def logout
     reset_session
 
-    redirect_to login_path
+    flash.notice = 'You have successfully logged out.'
+    redirect_to root_path
   end
 
   def authfail
-    render :text => params[:message]
+    flash.alert = params[:message]
+    redirect_to root_path
   end
 
   api :GET, '/users/:id/import', 'Import data from a provider'
@@ -48,12 +51,22 @@ class UsersController < ApplicationController
   def import
     current_user.import_data(params[:provider])
 
-    render :text => "woo"
+    head :ok
   end
 
   api :GET, '/users/:id', 'Get a specific user'
   def show
     @user = User.find(params[:id])
-    render json: @user, root: false
+  end
+
+  api :GET, '/users/search', 'Search for users'
+  param :q, String, :required => false
+  def search
+    @users = User.search do
+      fulltext params[:q] do
+        query_phrase_slop 2
+        phrase_slop 2
+      end
+    end.results if params[:q]
   end
 end

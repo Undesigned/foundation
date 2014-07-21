@@ -1,0 +1,13 @@
+<h1>Search</h1>
+
+<form method="get" action="/users/search">
+  <input type="search" name="q" id="search" placeholder="Search..."/>
+</form>
+
+<% if @users %>
+  <ul>
+  <% @users.each do |u| %>
+    <li><%= link_to u.name, u %></li>
+  <% end %>
+  </ul>
+<% end %>

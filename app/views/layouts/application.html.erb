@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="IdeaShopApp">
+<html>
 <head>
   <meta charset="utf-8" />
-  <title>Site Title</title>
-
+  <title>Found</title>
+  
   <%= stylesheet_link_tag 'application' %>
-
   <%= csrf_meta_tags %>
 </head>
-
   <body>
+    <% if flash[:notice] %>
+      <div class="notice"><%= flash[:notice] %></div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="alert"><%= flash[:alert] %></div>
+    <% end %>
 
     <%= yield %>
     <%= javascript_include_tag 'application' %>
 
   </body>
-
 </html>

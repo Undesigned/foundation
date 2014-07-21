@@ -20,7 +20,7 @@ class Startup < ActiveRecord::Base
 
   def save_meta_data(name, value, source)
     md = meta_data.find_or_initialize_by(name: name, source: source)
-    md.value = value
+    md.value = value.to_s
     md.save!
   end
 
