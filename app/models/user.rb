@@ -68,7 +68,7 @@ class User < ActiveRecord::Base
 
   def max_company_size
     case startups.map {|startup| startup.company_size.split('-').last.to_i}.max
-    when 0 then nil
+    when 0, nil then nil
     when 1..10 then '1-10'
     when 11..50 then '11-50'
     when 51..200 then '51-200'
@@ -157,9 +157,9 @@ class User < ActiveRecord::Base
       s = startups.where(name: startup_name).first
       if s
         r = roles.where(startup: s).first
-        r.update_attributes!(user_hsh)
+        r.assign_attributes(user_hsh)
       else
-        r = roles.create!(user_hsh)
+        r = roles.build(user_hsh)
       end
       
       # Update or create the startup
@@ -180,6 +180,7 @@ class User < ActiveRecord::Base
         funding_stage: funding[:stage]
       }.delete_if{|k,v| v.blank?}
       s ? s.update_attributes!(startup_hsh) : s = r.create_startup!(startup_hsh)
+      r.save!
 
       # Save angellist startup follower count and quality rating
       s.save_meta_data('follower_count', su['follower_count'], 'angellist') if su['follower_count']

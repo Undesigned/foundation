@@ -1,7 +1,23 @@
 <h1>Search</h1>
 
 <form method="get" action="/users/search">
-  <input type="search" name="q" id="search" placeholder="Search..."/>
+  I am looking for someone who is <input type="number" name="age" id="age" placeholder="23" maxlength="2" size="2" /> years old,
+  has <input type="number" name="years" id="years" placeholder="3" /> years of startup experience,
+  has worked on <input type="number" name="startups" id="startups" placeholder="1" /> startups,
+  has founded a business with <select name="size" id="size">
+    <option value="">Any</option>
+    <option value="1-10" selected="true">1-10</option>
+    <option value="11-50">11-50</option>
+    <option value="51-200">51-200</option>
+    <option value="201-500">201-500</option>
+    <option value="500+">500+</option>
+  </select> employees,
+  has <select name="funded" id="funded">
+    <option value="" selected="true">any fundraising status</option>
+    <option value="true">raised funding</option>
+  </select>, and is interested in <input type="search" name="q" id="search" placeholder="stuff you're interested in" size="50"/>.
+  <br/>
+  <input type="submit" name="submit" value="Search" />
 </form>
 
 <% if @users %>
