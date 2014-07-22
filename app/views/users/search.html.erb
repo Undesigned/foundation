@@ -1,21 +1,21 @@
 <h1>Search</h1>
 
 <form method="get" action="/users/search">
-  I am looking for someone who is <input type="number" name="age" id="age" placeholder="23" maxlength="2" size="2" /> years old,
-  has <input type="number" name="years" id="years" placeholder="3" /> years of startup experience,
-  has worked on <input type="number" name="startups" id="startups" placeholder="1" /> startups,
+  I want to talk to a founder who is <input type="number" name="age" id="age" placeholder="any number of" maxlength="2" size="2" value="<%= params[:age] %>" /> years old,
+  has <input type="number" name="years" id="years" placeholder="any number of" value="<%= params[:years] %>"/> years of startup experience,
+  has worked on <input type="number" name="startups" id="startups" placeholder="any number of" value="<%= params[:startups] %>" /> startups,
   has founded a business with <select name="size" id="size">
-    <option value="">Any</option>
-    <option value="1-10" selected="true">1-10</option>
-    <option value="11-50">11-50</option>
-    <option value="51-200">51-200</option>
-    <option value="201-500">201-500</option>
-    <option value="500+">500+</option>
+    <option value=""<%= params[:size].blank? ? ' selected="true"' : ''%>>any</option>
+    <option value="1-10"<%= params[:size] == '1-10' ? ' selected="true"' : ''%>>1-10</option>
+    <option value="11-50"<%= params[:size] == '11-50' ? ' selected="true"' : ''%>>11-50</option>
+    <option value="51-200"<%= params[:size] == '51-200' ? ' selected="true"' : ''%>>51-200</option>
+    <option value="201-500"<%= params[:size] == '201-500' ? ' selected="true"' : ''%>>201-500</option>
+    <option value="500+"<%= params[:size] == '500+' ? ' selected="true"' : ''%>>500+</option>
   </select> employees,
   has <select name="funded" id="funded">
-    <option value="" selected="true">any fundraising status</option>
-    <option value="true">raised funding</option>
-  </select>, and is interested in <input type="search" name="q" id="search" placeholder="stuff you're interested in" size="50"/>.
+    <option value=""<%= params[:funded].blank? ? ' selected="true"' : ''%>>any fundraising status</option>
+    <option value="true"<%= params[:funded] == 'true' ? ' selected="true"' : ''%>>raised funding</option>
+  </select>, and is interested in <input type="search" name="q" id="search" placeholder="stuff you're interested in" size="50" value="<%= params[:q] %>"/>.
   <br/>
   <input type="submit" name="submit" value="Search" />
 </form>
