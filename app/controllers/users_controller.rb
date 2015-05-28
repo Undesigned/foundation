@@ -59,6 +59,22 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
+  def edit
+    @user = current_user
+  end
+
+  def update
+    @user = current_user
+    @user.name = params[:name] if params[:name]
+    @user.bio = params[:bio] if params[:bio]
+    @user.what_ive_built = params[:what_ive_built] if params[:what_ive_built]
+    @user.what_i_do = params[:what_i_do] if params[:what_i_do]
+    @user.save!
+
+    flash.notice = 'Your profile was successfully updated.'
+    redirect_to @user
+  end
+
   api :GET, '/users/search', 'Search for users'
   param :q, String, :required => false, :desc => 'query to fulltext search keywords for'
   param :age, String, :required => false, :desc => 'approximate age of founder to search for'

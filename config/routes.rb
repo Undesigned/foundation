@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
-  resources :users do
+  resources :users, only: [:show] do
     get 'logout', 'import', on: :member
-    get 'search', on: :collection
+    get 'search', 'edit', on: :collection
+    post 'update', on: :collection
   end
 
   # Omniauth callback

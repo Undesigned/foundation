@@ -39,16 +39,11 @@ class User < ActiveRecord::Base
       startups.map { |startup| startup.markets.pluck(:name) }.flatten
     end
     string :max_company_size
-    integer :total_startup_years
     integer :startup_count do
       startups.count
     end
-    integer :technical_points
-    integer :design_points
-    integer :business_points
-    integer :age
-    boolean :investor
-    boolean :funded
+    integer :technical_points, :design_points, :business_points, :age, :total_startup_years
+    boolean :investor, :funded
   end
 
   def age

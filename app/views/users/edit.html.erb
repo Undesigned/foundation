@@ -1,0 +1,10 @@
+<img src="<%= @user.image %>" class="img-circle"/>
+<form method="post" action="/users/update">
+  <input type="text" name="name" id="name" value="<%= @user.name %>" />
+
+  <textarea name="bio" id="bio"><%= @user.bio %></textarea>
+  <textarea name="what_ive_built" id="what_ive_built"><%= @user.what_ive_built %></textarea>
+  <textarea name="what_i_do" id="what_i_do"><%= @user.what_i_do %></textarea>
+
+  <input type="submit" value="Edit" />
+</form>
